@@ -1,0 +1,3 @@
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+Checks: 'clang-analyzer-*,bugprone-*,performance-*,-modernize-use-trailing-return-type'
