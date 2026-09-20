@@ -1,3 +1,5 @@
+#pragma once
+
 template <typename T>
 class RawBuffer {
   T *data = nullptr;
@@ -12,7 +14,7 @@ public:
      delete[] data;
   }
 
-  RawBuffer(const RawBuffer &that) : 
+  RawBuffer(const RawBuffer &that) :
     data(new T[that.size]),
     size(that.size) {
     try {

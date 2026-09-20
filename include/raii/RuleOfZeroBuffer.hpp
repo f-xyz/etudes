@@ -1,3 +1,5 @@
+#pragma once
+
 template <typename T>
 class RuleOfZeroBuffer {
   std::unique_ptr<T[]> data = nullptr;

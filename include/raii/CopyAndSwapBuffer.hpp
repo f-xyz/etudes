@@ -1,3 +1,5 @@
+#pragma once
+
 template <typename T>
 class CopyAndSwapBuffer {
   std::unique_ptr<T[]> data;
