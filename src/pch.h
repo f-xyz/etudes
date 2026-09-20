@@ -1,26 +1,49 @@
 #pragma once
 
 // Core STL
-#include <algorithm>
+#include <array>
 #include <cctype>
-#include <chrono>
-#include <cmath>
+#include <clocale>
+#include <codecvt>
+#include <concepts>
+#include <condition_variable>
 #include <csignal>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <exception>
 #include <expected>
 #include <filesystem>
+#include <format>
+#include <fstream>
 #include <functional>
 #include <future>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
+#include <limits>
+#include <locale>
 #include <map>
 #include <memory>
+#include <mutex>
+#include <numeric>
+#include <optional>
 #include <print>
+#include <queue>
 #include <random>
 #include <ranges>
 #include <regex>
+#include <set>
+#include <sstream>
 #include <stacktrace>
 #include <stdexcept>
+#include <string_view>
 #include <string>
-#include <thread>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 // CLI 11

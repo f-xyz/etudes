@@ -3,8 +3,8 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++-14 build active file",
-            "command": "/usr/bin/g++-14",
+            "label": "clang++ build active file",
+            "command": "/usr/bin/clang++",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
@@ -16,7 +16,7 @@
                 "cwd": "${fileDirname}"
             },
             "problemMatcher": [
-                "$gcc"
+                "$clang"
             ],
             "group": {
                 "kind": "build",
