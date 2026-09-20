@@ -1,14 +1,17 @@
-#include "raii/StdBuffer.hpp"
-#include <cli/hexdump.hpp>
-#include <numeric>
+#include "patterns/ThreadPool.hpp"
+#include "patterns/ThreadPoolWorkStealing.hpp"
+#include <TerminateHandler.hpp>
+#include <benchmarking/Timer.hpp>
+#include <cli/colors.hpp>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 int main(const int, const char **) {
-  std::println("Hello");
+  // runThreadPool();
+  runThreadPoolWorkStealing();
 
-  StdBuffer<char> buffer(100);
-  std::ranges::iota(buffer.data.get(), buffer.data.get() + 100, 0);
-  auto dump = utils::cli::hexdump(buffer.data.get(), buffer.size);
-  std::println("{}", dump);
+  std::this_thread::sleep_for(500ms);
 
   return 0;
 }
