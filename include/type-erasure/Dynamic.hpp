@@ -1,3 +1,5 @@
+#pragma once
+
 #include <concepts>
 #include <memory>
 #include <utility>
@@ -28,12 +30,12 @@ class Dynamic {
 
 public:
   template <DoesStuff T>
-  Dynamic(T x) 
+  Dynamic(T x)
     : pimpl(std::make_unique<Model<T>>(x)) {}
 
   Dynamic(const Dynamic &that)
     : pimpl(that.pimpl ? that.pimpl->clone() : nullptr) {}
-  
+
   Dynamic &operator=(const Dynamic &that) {
     if (this != &that) {
       pimpl = that.pimpl ? that.pimpl->clone() : nullptr;
