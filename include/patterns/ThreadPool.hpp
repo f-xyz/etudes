@@ -32,33 +32,8 @@ public:
   explicit ThreadPool(std::size_t n) {
     threads.reserve(n);
 
-    for (std::size_t i = 0; i < n; ++i) {
-      threads.emplace_back([this, i] {
-        cl.log("Thread {} started with {} tasks", i, queue.size());
-
-        while (true) {
-          cl.log("Thread {} sleeps with {} tasks", i, queue.size());
-
-          std::packaged_task<void()> task;
-
-          {
-            std::unique_lock lock(mutex);
-            cv.wait(lock, [this] { return queue.size() > 0 || !isRunning; });
-
-            if (!isRunning && queue.empty()) {
-              break;
-            }
-
-            cl.log("Thread {} awakens with {} tasks", i, queue.size());
-            task = std::move(queue.front());
-            queue.pop();
-          }
-
-          task();
-        }
-
-        cl.log("Thread {} ended", i);
-      });
+    for (std::size_t id = 0; id < n; ++id) {
+      threads.emplace_back([this, id] { worker(id); });
     }
   }
 
@@ -68,6 +43,7 @@ public:
   ThreadPool &operator=(ThreadPool &&) = delete;
 
   ~ThreadPool() {
+    std::println("----------------");
     std::println("Shutting down...");
 
     {
@@ -76,6 +52,31 @@ public:
     }
 
     cv.notify_all();
+  }
+
+  void worker(std::size_t id) {
+    cl.log("Thread {} started with {} tasks", id, queue.size());
+
+    while (true) {
+      cl.log("Thread {} sleeps with {} tasks", id, queue.size());
+
+      std::packaged_task<void()> task;
+
+      {
+        std::unique_lock lock(mutex);
+        cv.wait(lock, [this] { return queue.size() > 0 || !isRunning; });
+
+        if (!isRunning && queue.empty()) {
+          break;
+        }
+
+        cl.log("Thread {} awakens with {} tasks", id, queue.size());
+        task = std::move(queue.front());
+        queue.pop();
+      }
+
+      task();
+    }
   }
 
   template <typename F, typename... Args> auto submit(F &&fn, Args &&...args) {
@@ -88,38 +89,11 @@ public:
 
     {
       std::scoped_lock lock(mutex);
-
       queue.emplace([task = std::move(task)] mutable { task(); });
-      cv.notify_one();
     }
+
+    cv.notify_one();
 
     return future;
   }
 };
-
-void runThreadPool() {
-  TerminateHandler::install();
-  ThreadPool pool(4);
-  Timer<seconds> timer;
-
-  const std::size_t n = 10;
-  std::vector<std::future<int>> futures;
-
-  for (std::size_t i = 0; i < n; ++i) {
-    std::println("Task {}: submitting...", i);
-    auto future = pool.submit([i] {
-      std::this_thread::sleep_for(1s);
-      std::println("Task {}: finished by thread {}", i,
-                   std::this_thread::get_id());
-      return 123;
-    });
-
-    futures.push_back(std::move(future));
-  }
-
-  for (std::size_t i = 0; i < n; ++i) {
-    std::println("Task {}: result: {}", i, futures[i].get());
-  }
-
-  std::println("Finished in {}", timer.measure());
-}

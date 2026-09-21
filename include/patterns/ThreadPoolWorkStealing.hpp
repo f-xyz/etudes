@@ -100,8 +100,6 @@ public:
 
       task();
     }
-
-    cl.log("Thread {} ended", id);
   }
 
   bool waiter(Worker &worker) {
@@ -155,37 +153,3 @@ public:
     return future;
   }
 };
-
-void runThreadPoolWorkStealing() {
-  TerminateHandler::install();
-  ThreadPoolWorkStealing pool(2);
-  Timer<milliseconds> timer;
-
-  const std::size_t nTasks = 4;
-  std::vector<std::future<std::string>> futures;
-
-  for (std::size_t i = 0; i < nTasks; ++i) {
-    std::this_thread::sleep_for(100ms);
-    std::println("Task {}: submitting...", i);
-
-    auto future = pool.submit([i] {
-      const int randomTime = static_cast<int>(random(500, 1500));
-      std::chrono::milliseconds ms(randomTime);
-      std::this_thread::sleep_for(ms);
-
-      std::println("Task {}: finished by thread {}", i,
-                   std::this_thread::get_id());
-
-      const auto ch = static_cast<char>('0' + i);
-      return std::string(3, ch);
-    });
-
-    futures.push_back(std::move(future));
-  }
-
-  for (std::size_t i = 0; i < nTasks; ++i) {
-    std::println("Task {}: result: {}", i, futures[i].get());
-  }
-
-  std::println("Finished in {}", timer.measure());
-}
