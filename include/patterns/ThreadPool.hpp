@@ -1,3 +1,5 @@
+#pragma once
+
 #include "helpers/ColorLogger.hpp"
 #include <TerminateHandler.hpp>
 #include <algorithm>
@@ -20,7 +22,7 @@ using namespace std::chrono_literals;
 using std::chrono::seconds;
 using utils::benchmarking::Timer;
 
-class ThreadPool final {
+class ThreadPool {
   std::queue<std::packaged_task<void()>> queue;
   std::vector<std::jthread> threads;
   std::mutex mutex;
@@ -54,6 +56,25 @@ public:
     cv.notify_all();
   }
 
+  template <typename F, typename... Args> auto submit(F &&fn, Args &&...args) {
+    using Result = std::invoke_result_t<F, Args...>;
+
+    auto bound =
+        std::bind_front(std::forward<F>(fn), std::forward<Args>(args)...);
+    auto task = std::packaged_task<Result()>(std::move(bound));
+    auto future = task.get_future();
+
+    {
+      std::scoped_lock lock(mutex);
+      queue.emplace([task = std::move(task)] mutable { task(); });
+    }
+
+    cv.notify_one();
+
+    return future;
+  }
+
+private:
   void worker(std::size_t id) {
     cl.log("Thread {} started with {} tasks", id, queue.size());
 
@@ -77,23 +98,5 @@ public:
 
       task();
     }
-  }
-
-  template <typename F, typename... Args> auto submit(F &&fn, Args &&...args) {
-    using Result = std::invoke_result_t<F, Args...>;
-
-    auto bound =
-        std::bind_front(std::forward<F>(fn), std::forward<Args>(args)...);
-    auto task = std::packaged_task<Result()>(std::move(bound));
-    auto future = task.get_future();
-
-    {
-      std::scoped_lock lock(mutex);
-      queue.emplace([task = std::move(task)] mutable { task(); });
-    }
-
-    cv.notify_one();
-
-    return future;
   }
 };

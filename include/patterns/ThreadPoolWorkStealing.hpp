@@ -12,8 +12,10 @@
 #include <format>
 #include <functional>
 #include <future>
+#include <iterator>
 #include <math.hpp>
 #include <mutex>
+#include <random>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -25,7 +27,7 @@ using std::chrono::seconds;
 using utils::benchmarking::Timer;
 using utils::math::random;
 
-class ThreadPoolWorkStealing final {
+class ThreadPoolWorkStealing {
   struct Task {
     std::size_t id;
     std::packaged_task<void()> task;
@@ -75,57 +77,6 @@ public:
     cv.notify_all();
   }
 
-  void worker(std::size_t id) {
-    auto &worker = workers[id];
-    cl.log("Thread {} started", worker.id);
-
-    while (true) {
-      Task task;
-
-      {
-        cl.log("Thread {} sleeps", id);
-        std::unique_lock lock(mutex);
-        cv.wait(lock, [this, &worker] { return waiter(worker); });
-
-        if (!isRunning && worker.queue.empty()) {
-          break;
-        }
-
-        cl.log("Thread {} awakens with {} tasks", id, worker.queue.size());
-
-        task = std::move(worker.queue.back());
-        cl.log("Thread {} current task ID: {}", id, task.id);
-        worker.queue.pop_back();
-      }
-
-      task();
-    }
-  }
-
-  bool waiter(Worker &worker) {
-    if (!isRunning) {
-      return true;
-    }
-
-    if (worker.queue.size() > 0) {
-      return true;
-    }
-
-    auto mostLoadedWorker =
-        std::ranges::max_element(workers, std::less(), &Worker::nTasks);
-
-    if (mostLoadedWorker->id != worker.id && mostLoadedWorker->nTasks() > 0) {
-      cl.log("Thread {} steals a task from {}", worker.id,
-             mostLoadedWorker->id);
-      auto task = std::move(mostLoadedWorker->queue.front());
-      mostLoadedWorker->queue.pop_front();
-      worker.queue.emplace_back(std::move(task));
-      return true;
-    }
-
-    return false;
-  }
-
   template <typename F, typename... Args> auto submit(F &&fn, Args &&...args) {
     using Result = std::invoke_result_t<F, Args...>;
 
@@ -151,5 +102,82 @@ public:
     cv.notify_one();
 
     return future;
+  }
+
+private:
+  void worker(std::size_t id) {
+    auto &worker = workers[id];
+    cl.log("Thread {} started", worker.id);
+
+    while (true) {
+      Task task;
+
+      {
+        cl.log("Thread {} sleeps", id);
+        std::unique_lock lock(mutex);
+        cv.wait(lock, [this, &worker] { return waiter(worker); });
+
+        if (isShuttingDown(worker)) {
+          break;
+        }
+
+        cl.log("Thread {} awakens with {} tasks", id, worker.queue.size());
+
+        task = std::move(worker.queue.back());
+        cl.log("Thread {} current task ID: {}", id, task.id);
+        worker.queue.pop_back();
+      }
+
+      task();
+    }
+  }
+
+  bool waiter(Worker &worker) {
+    // If shutting down, unblock the thread
+    if (!isRunning) {
+      return true;
+    }
+
+    // If the thread has work to do
+    if (worker.queue.size() > 0) {
+      return true;
+    }
+
+    // Or other threads have some work
+    auto randomWorkerIds = getRandomWorkerIds();
+    for (const auto &randomWorkerId : randomWorkerIds) {
+      if (randomWorkerId == worker.id) {
+        continue;
+      }
+
+      auto &victim = workers[randomWorkerId];
+      if (victim.nTasks() > 0) {
+        cl.log("Thread {} steals a task from {}", worker.id, victim.id);
+        auto task = std::move(victim.queue.front());
+        victim.queue.pop_front();
+        worker.queue.emplace_back(std::move(task));
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  std::vector<std::size_t> getRandomWorkerIds() {
+    std::vector<std::size_t> randomWorkerIds;
+    randomWorkerIds.reserve(workers.size());
+
+    std::ranges::transform(workers, std::back_inserter(randomWorkerIds),
+                           &Worker::id);
+
+    thread_local std::random_device rd;
+    thread_local std::mt19937 mt(rd());
+    std::ranges::shuffle(randomWorkerIds, mt);
+
+    return randomWorkerIds;
+  }
+
+  bool isShuttingDown(const Worker &worker) {
+    return !isRunning && worker.queue.empty();
   }
 };
