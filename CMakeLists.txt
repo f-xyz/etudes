@@ -54,4 +54,9 @@ target_link_libraries(etudes PRIVATE
   cpp-dump
   OpenMP::OpenMP_CXX)
 
-# include(cmake/sanitizers.cmake)
+########################################
+## Sanitizers ##########################
+########################################
+
+# include(cmake/AdddessAndUbSanitizers.cmake)
+# include(cmake/ThreadSanitizer.cmake)
