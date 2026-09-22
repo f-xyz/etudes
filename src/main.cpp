@@ -1,20 +1,18 @@
-#include "helpers/ThreadPoolLoader.hpp"
-#include "patterns/ThreadPool.hpp"
-#include "patterns/ThreadPoolWorkStealing.hpp"
-#include <TerminateHandler.hpp>
-#include <benchmarking/Timer.hpp>
-#include <cli/colors.hpp>
-
-using namespace std::chrono_literals;
+#include "patterns/CRTP.hpp"
+#include <variant>
 
 int main(const int, const char **) {
-  TerminateHandler::install();
-  ThreadPoolWorkStealing pool(4);
+  using Logger = std::variant<ConsoleLogger, FileLogger>;
 
-  Timer<seconds> timer;
-  ThreadPoolLoader<decltype(pool)> loader;
-  loader.generateLoad(pool, 10);
-  std::println("Finished in {}", timer.measure());
+  std::vector<Logger> v;
+  v.push_back(ConsoleLogger());
+  v.push_back(FileLogger());
+
+  for (auto &&logger : v) {
+    std::visit([](auto &&logger) {
+      write(logger, "Hello");
+    }, logger);
+  }
 
   return 0;
 }
