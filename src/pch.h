@@ -7,6 +7,7 @@
 #include <codecvt>
 #include <concepts>
 #include <condition_variable>
+#include <coroutine>
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +20,7 @@
 #include <fstream>
 #include <functional>
 #include <future>
+#include <generator>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -38,15 +40,20 @@
 #include <sstream>
 #include <stacktrace>
 #include <stdexcept>
-#include <string_view>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-// CLI 11
+// FMT
+#include <fmt/color.h>
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+// CLI11
 #include <3rd-party/CLI11.hpp>
 
 // CFITSIO

@@ -28,11 +28,7 @@ if(MOLD_PROGRAM)
   add_link_options(-fuse-ld=mold)
 endif()
 
-include(FetchContent)
-FetchContent_Declare(cpp-dump
-  GIT_REPOSITORY https://github.com/philip82148/cpp-dump
-  GIT_TAG v0.7.0)
-FetchContent_MakeAvailable(cpp-dump)
+find_package(fmt CONFIG REQUIRED)
 
 ########################################
 ## Executable ##########################
@@ -44,14 +40,14 @@ target_precompile_headers(etudes PRIVATE src/pch.h)
 target_include_directories(etudes PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_compile_options(etudes PRIVATE
-  -Wall -Wextra -Wpedantic -fopenmp
+  -Wall -Wextra -Wpedantic -fopenmp -fsized-deallocation
   $<$<CXX_COMPILER_ID:GNU,Clang>:-fdiagnostics-color=always>)
 target_compile_definitions(etudes PRIVATE
   NAME="${PROJECT_NAME}"
   VERSION="${PROJECT_VERSION}")
 target_link_libraries(etudes PRIVATE
   astroutils::astroutils
-  cpp-dump
+  fmt::fmt
   OpenMP::OpenMP_CXX)
 
 ########################################
