@@ -1,18 +1,16 @@
-#include "patterns/CRTP.hpp"
-#include <variant>
+#include "coroutines/TaskAndAwaiter.hpp"
 
 int main(const int, const char **) {
-  using Logger = std::variant<ConsoleLogger, FileLogger>;
+  auto gen = coroutine();
 
-  std::vector<Logger> v;
-  v.push_back(ConsoleLogger());
-  v.push_back(FileLogger());
+  std::println("{}", gen.get());
+  gen.next();
 
-  for (auto &&logger : v) {
-    std::visit([](auto &&logger) {
-      write(logger, "Hello");
-    }, logger);
-  }
+  std::println("{}", gen.get());
+  gen.next();
+
+  std::println("{}", gen.get());
+  gen.next();
 
   return 0;
 }
