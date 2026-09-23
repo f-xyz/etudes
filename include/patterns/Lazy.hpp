@@ -1,21 +1,25 @@
 #pragma once
 
+#include <functional>
 #include <optional>
-#include <utility>
 
-template <typename T, typename... Args>
+template <typename T>
 class Lazy {
   std::optional<T> value;
+  std::function<T()> factory;
 
 public:
-  T &get(Args &&...args) {
+  explicit Lazy(std::function<T()> factory)
+    : factory(std::move(factory)) {}
+
+  T &get() {
     if (!value.has_value()) {
-      value.emplace(std::forward<Args>(args)...);
+      value.emplace(factory());
     }
     return *value;
   }
 
-  const T &get() const { return const_cast<Lazy *>(this)->get(); }
+  const T &get() const { return get(); }
 
   // Pointer-like syntax
   T &operator*() { return get(); }
