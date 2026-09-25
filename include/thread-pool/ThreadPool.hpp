@@ -1,26 +1,24 @@
 #pragma once
 
 #include "helpers/ColorLogger.hpp"
-#include <TerminateHandler.hpp>
-#include <algorithm>
-#include <async/setTimeout.hpp>
-#include <benchmarking/Timer.hpp>
+#include <astroutils/benchmarking/Timer.hpp>
+#include <atomic>
 #include <chrono>
-#include <cli/colors.hpp>
 #include <condition_variable>
-#include <fitsio.h>
-#include <format>
+#include <cstddef>
 #include <functional>
 #include <future>
 #include <mutex>
+#include <print>
 #include <queue>
 #include <thread>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 using namespace std::chrono_literals;
 using std::chrono::seconds;
-using utils::benchmarking::Timer;
+using astroutils::benchmarking::Timer;
 
 class ThreadPool {
   std::queue<std::packaged_task<void()>> queue;

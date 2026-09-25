@@ -1,10 +1,10 @@
 #pragma once
 
-#include <math.hpp>
+#include <astroutils/math.hpp>
 #include <thread>
 
 using namespace std::chrono_literals;
-using utils::math::random;
+using astroutils::math::random;
 
 template <typename T>
 concept HasSubmit = requires(T &pool) { pool.submit([] {}); };

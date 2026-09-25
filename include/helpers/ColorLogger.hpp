@@ -1,6 +1,8 @@
 #pragma once
 
-#include <cli/colors.hpp>
+#include <astroutils/cli/colors.hpp>
+
+using astroutils::cli::rgb;
 
 class ColorLogger {
   std::vector<unsigned int> colors;
@@ -14,6 +16,6 @@ public:
     const auto formatArgs = std::make_format_args(id, args...);
     const auto line = std::vformat(msg, formatArgs);
 
-    std::println("{}", utils::cli::rgb(line, color));
+    std::println("{}", rgb(line, color));
   }
 };
